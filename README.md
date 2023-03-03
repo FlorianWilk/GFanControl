@@ -15,7 +15,7 @@ go run .
 ### Build
 
 ```
-go build -o /usr/local/bin/gfancontrol .
+go build -o ~/.local/bin/gfancontrol .
 ```
 
 ### Install 
@@ -23,5 +23,5 @@ go build -o /usr/local/bin/gfancontrol .
 add the following line to your ~/.xprofile
 
 ```
-gfancontrol 2> ~/.gfancontrol.logs &
+$HOME/.local/bin/gfancontrol 2> ~/.gfancontrol.logs &
 ```

@@ -21,7 +21,7 @@ const command = "/usr/bin/nvidia-settings"
 
 func onReady() {
 	mimage := image.NewRGBA(image.Rect(0, 0, 16, 16))
-	systray.SetIcon(draws(mimage, 0))
+	systray.SetIcon(draws(mimage, 0, 0))
 	systray.SetTitle("")
 	systray.SetTooltip("")
 	go func() {
@@ -45,7 +45,7 @@ func onReady() {
 			} else {
 				speed = 0
 			}
-			systray.SetIcon(draws(mimage, speed))
+			systray.SetIcon(draws(mimage, speed, temp))
 
 			log.Printf("%d degree. Speed: %d", temp, speed)
 			setSpeed(0, speed)
@@ -60,7 +60,6 @@ func ncmd(cmd string) string {
 
 func rncmd(cmd2 string) string {
 	cmd := ncmd(cmd2)
-	log.Println(cmd2)
 	out, err := exec.Command("/bin/sh", "-c", cmd).CombinedOutput()
 	if err != nil {
 		log.Printf("error %s while executing command: %s", err, string(out))
@@ -87,12 +86,19 @@ func setSpeed(fan int, speed int) {
 	rncmd(fmt.Sprintf(`-a="[fan:%d]/GPUTargetFanSpeed=%d"`, fan, speed))
 }
 
-func draws(mimage *image.RGBA, val int) []byte {
+func draws(mimage *image.RGBA, val int, temp int) []byte {
 	col2 := color.RGBA{00, 0xa0, 0xff, 255}
+	col3 := color.NRGBA{0xff, 0, 0xff, 255}
 	col := color.RGBA{80, 80, 80, 50}
-	bcol := color.RGBA{255, 255, 255, 0}
+	bcol := color.RGBA{0, 0, 0, 0}
 	draw.Draw(mimage, mimage.Bounds(), &image.Uniform{bcol}, image.Point{}, draw.Src)
 	mm := 7
+
+	t2 := math.Max(float64(temp-40.0), 0)
+
+	col3.A = uint8((255.0 / 50.0) * math.Min(float64(t2), 50.0))
+	//fmt.Println(col3)
+
 	for y := 0; y < 16; y++ {
 		for x := 0; x < 16; x++ {
 
@@ -100,15 +106,15 @@ func draws(mimage *image.RGBA, val int) []byte {
 			yd := float64(y - mm)
 			a := math.Atan2(xd, yd) * (180 / math.Pi)
 			d := math.Sqrt(float64(xd*xd + yd*yd))
-			// if d < 3.0 && d > 3 {
-			// 	if a > -180 && a < 180-(360.0/100.0*float64(val)) {
-			// 		//					mimage.Set(x, y, col)
+			if d < 3.0 && d >= 0 {
+				// 	if a > -180 && a < 180-(360.0/100.0*float64(val)) {
+				mimage.Set(x, y, col3)
 
-			// 	} else {
-			// 		//					mimage.Set(x, y, col)
-			// 	}
-			// } else
-			if d >= 4 && d <= 6.0 {
+				// 	} else {
+				// 		//					mimage.Set(x, y, col)
+				// 	}
+				// } else
+			} else if d >= 4 && d <= 6.0 {
 				if a > -180 && a < 180-(360.0/100.0*float64(val)) {
 					mimage.Set(x, y, col)
 
