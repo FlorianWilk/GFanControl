@@ -20,10 +20,14 @@ import (
 const command = "/usr/bin/nvidia-settings"
 
 const FAN_COUNT = 2
-const ICON_SIZE = 16
+const ICON_SIZE = 24
 const UPDATE_INTERVAL_SEC = 5
 const TEMP_MIN = 40
 const TEMP_MAX = 90
+
+const RADIUS_INDICATOR = (ICON_SIZE/4 - ICON_SIZE/16)
+const RADIUS_RING = ICON_SIZE / 4
+const RADIUS_RING_OUT = (ICON_SIZE/4 + ICON_SIZE/8)
 
 var bgColor = color.RGBA{0, 0, 0, 0}
 var fanSpeedColor = color.RGBA{00, 0xa0, 0xff, 255}
@@ -36,9 +40,9 @@ func onReady() {
 	systray.SetTooltip("")
 	sysInfo := systray.AddMenuItem("", "")
 	go func() {
+		setFanControl(0, 1)
 		for {
 			temp := getTemp()
-			setFanControl(0, 1)
 			var speed int
 			if temp > 75 {
 				speed = 85
@@ -116,9 +120,9 @@ func draws(mimage *image.RGBA, val int, temp int) []byte {
 			a := math.Atan2(xd, yd) * (180 / math.Pi)
 			d := math.Sqrt(float64(xd*xd + yd*yd))
 
-			if d < 3.0 && d >= 0 {
+			if d < RADIUS_INDICATOR && d >= 0 {
 				mimage.Set(x, y, col3)
-			} else if d >= 4 && d <= 6.0 {
+			} else if d >= RADIUS_RING && d <= RADIUS_RING_OUT {
 				if a > -180 && a < 180.0-(360.0/100.0*float64(val)) {
 					mimage.Set(x, y, circleColor)
 				} else {
